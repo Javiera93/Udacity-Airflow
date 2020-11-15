@@ -5,6 +5,12 @@ from airflow.utils.decorators import apply_defaults
 class LoadDimensionOperator(BaseOperator):
 
     ui_color = '#80BD9E'
+    
+    insert_sql = """
+        INSERT INTO {}
+        {}
+        ;
+    """
 
     @apply_defaults
     def __init__(self,
@@ -29,4 +35,13 @@ class LoadDimensionOperator(BaseOperator):
         self.primary_key = primary_key
 
     def execute(self, context):
+        redshift = PostgresHook(postgres_conn_id=self.redshift_conn_id)
+        
+        formatted_sql = LoadDimensionOperator.insert_sql.format(
+            self.table,
+            self.sql_source
+        )
+        self.log.info(f"Executing {formatted_sql} ...")
+        redshift.run(formatted_sql)
+        
         self.log.info('LoadDimensionOperator not implemented yet')
