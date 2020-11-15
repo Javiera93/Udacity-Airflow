@@ -57,8 +57,7 @@ class StageToRedshiftOperator(BaseOperator):
             self.table,
             s3_path,
             credentials.access_key,
-            credentials.secret_key,
-            self.extra_params
+            credentials.secret_key
         )
         self.log.info(f"Executing {formatted_sql} ...")
         redshift.run(formatted_sql)
