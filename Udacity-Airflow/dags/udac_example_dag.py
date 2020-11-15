@@ -12,12 +12,18 @@ from helpers import SqlQueries
 default_args = {
     'owner': 'udacity',
     'start_date': datetime(2019, 1, 12),
+    'depends_on_past': False,
+    'retries': 3,
+    'retry_delay': timedelta(minutes=5),
+    'catchup_by_default': False,
+    'email_on_retry': False
 }
 
 dag = DAG('udac_example_dag',
           default_args=default_args,
           description='Load and transform data in Redshift with Airflow',
           schedule_interval='0 * * * *'
+          catchup = False
         )
 
 start_operator = DummyOperator(task_id='Begin_execution',  dag=dag)
@@ -37,6 +43,7 @@ stage_events_to_redshift = StageToRedshiftOperator(
     s3_key='log_data',
     copy_json_option='s3://udacity-dend/log_json_path.json',
     region='us-west-2',
+    data_format="JSON"
     dag=dag
 )
 
@@ -49,6 +56,7 @@ stage_songs_to_redshift = StageToRedshiftOperator(
     s3_key='song_data',
     copy_json_option='auto',
     region='us-west-2',
+    data_format="JSON"
     dag=dag
 )
 
@@ -57,6 +65,7 @@ load_songplays_table = LoadFactOperator(
     redshift_conn_id='redshift',
     table='songplays',
     select_sql=SqlQueries.songplay_table_insert,
+    append_only=False
     dag=dag
 )
 
@@ -65,6 +74,7 @@ load_user_dimension_table = LoadDimensionOperator(
     redshift_conn_id='redshift',
     table='users',
     select_sql=SqlQueries.user_table_insert,
+    append_only=False
     dag=dag
 )
 
@@ -73,6 +83,7 @@ load_song_dimension_table = LoadDimensionOperator(
     redshift_conn_id='redshift',
     table='songs',
     select_sql=SqlQueries.song_table_insert,
+    append_only=False
     dag=dag
 )
 
@@ -83,6 +94,7 @@ load_artist_dimension_table = LoadDimensionOperator(
     select_sql=SqlQueries.artist_table_insert,
     append_insert=True,
     primary_key="artistid",
+    append_only=False
     dag=dag
 )
 
@@ -91,6 +103,7 @@ load_time_dimension_table = LoadDimensionOperator(
     redshift_conn_id='redshift',
     table='time',
     select_sql=SqlQueries.time_table_insert,
+    append_only=False
     dag=dag
 )
 
